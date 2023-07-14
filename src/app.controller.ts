@@ -7,9 +7,11 @@ import {
   Put,
   Delete,
 } from '@nestjs/common';
-import { UserService } from './user.service';
-import { PostService } from './post.service';
-import { User as UserModel, Post as PostModel } from '@prisma/client';
+import { UserService } from './user/user.service';
+import { PostService } from './post/post.service';
+import { User as UserModel, Post as PostModel, Prisma } from '@prisma/client';
+import { ApiBody } from '@nestjs/swagger';
+
 
 @Controller()
 export class AppController {
@@ -54,9 +56,22 @@ export class AppController {
   }
 
   @Post('post')
-  async createDraft(
-    @Body() postData: { title: string; content?: string; authorEmail: string },
-  ): Promise<PostModel> {
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        content: { type: 'string' },
+        authorEmail: { type: 'string' },
+      },
+      required: ['title', 'authorEmail'],
+    },
+  })
+  async createDraft(@Body() postData: {
+    title: string;
+    content?: string;
+    authorEmail: string;
+  }): Promise<PostModel> {
     const { title, content, authorEmail } = postData;
     return this.postService.createPost({
       title,
@@ -68,8 +83,18 @@ export class AppController {
   }
 
   @Post('user')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        email: { type: 'string' },
+      },
+      required: ['name', 'email'],
+    },
+  })
   async signupUser(
-    @Body() userData: { name?: string; email: string },
+    @Body() userData: { name: string; email: string },
   ): Promise<UserModel> {
     return this.userService.createUser(userData);
   }
